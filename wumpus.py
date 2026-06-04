@@ -190,19 +190,27 @@ def move_player(player):
     player.location = new_location
 
 
+def handle_wumpus_move(player, wumpus):
+    if wumpus.location == player.location:
+        print("Tsk tsk tsk - Wumpus got you!")
+        player.alive = False
+
+
+def random_room():
+    return random.choice(list(CAVE.keys()))
+
+
 def encounter_handler(player, wumpus, hazards):
     for hazard in hazards:
         if player.alive and player.location == hazard.location:
             if hazard.kind == "wumpus":
                 print("... Oops! Bumped a wumpus!")
                 wumpus.bumped()
-                if wumpus.location == player.location:
-                    print("Tsk tsk tsk - Wumpus got you!")
-                    player.alive = False
+                handle_wumpus_move(player, wumpus)
                 break
             elif hazard.kind == "bat":
                 print("Zap - super bat snatch! Elsewhereville for you!")
-                player.location = random.randint(1, 20)
+                player.location = random_room()
                 encounter_handler(player, wumpus, hazards)
                 break
             elif hazard.kind == "pit":
@@ -224,6 +232,7 @@ def main():
 
         # Main game loop
         while True:
+            print()
             give_warnings(player.location, hazards)
             where_is_player(player.location)
             player_move = get_player_move()
@@ -235,28 +244,30 @@ def main():
                         break
                     print("Arrows aren't that crooked - try another room")
                 if outcome == Outcome.MISS:
-                    print("Missed.")
+                    print("Missed.\n")
                     wumpus.bumped()
+                    handle_wumpus_move(player, wumpus)
                 elif outcome == Outcome.PLAYER:
-                    print("Ouch! Arrow got you!")
+                    print("Ouch! Arrow got you!\n")
                     player.alive = False
                 elif outcome == Outcome.WUMPUS:
-                    print("Aha! You got the wumpus!")
+                    print("Aha! You got the wumpus!\n")
                     wumpus.alive = False
             elif player_move == "M":
                 move_player(player)
                 encounter_handler(player, wumpus, hazards)
             if not wumpus.alive:
-                print("Hee hee hee - the wumpus'll getcha next time!!")
+                print("\nHee hee hee - the wumpus'll getcha next time!!\n")
                 break
-            if player.arrows > 0:
-                print(f"You have {player.arrows} arrows remaining.")
-            else:
-                print("You have no more arrows. The wumpus eventually catches up to you. You cannot defend yourself.")
-                player.alive = False
             if not player.alive:
-                print("Ha ha ha - you lose!")
+                print("\nHa ha ha - you lose!\n")
                 break
+            if player.arrows <= 0:
+                print("You have no more arrows. The wumpus eventually catches up to you. You cannot defend yourself.\n")
+                player.alive = False
+                print("\nHa ha ha - you lose!\n")
+                break
+            print(f"You have {player.arrows} arrows remaining.")
 
         # Continue or end
         while True:
